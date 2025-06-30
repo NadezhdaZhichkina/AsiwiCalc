@@ -37,6 +37,18 @@ def parse_file(file):
         df = pd.DataFrame()
     return df
 
+def find_price_column(df):
+    possible_names = [
+        "стоимость", "цена", "стоимость с ндс", "цена с ндс", "стоимость без ндс"
+    ]
+    for col in df.columns:
+        if isinstance(col, str):
+            col_lower = col.lower().strip()
+            for name in possible_names:
+                if name in col_lower:
+                    return col
+    return None
+
 def generate_docx(table_df, total):
     doc = Document()
     doc.add_heading('Спецификация для клиента', 0)
@@ -66,11 +78,10 @@ if uploaded_file:
         st.subheader("📄 Считанная спецификация:")
         st.dataframe(df_spec)
 
-        price_col = [col for col in df_spec.columns if 'стоим' in col.lower()]
+        price_col = find_price_column(df_spec)
         if not price_col:
-            st.error("❌ Таблица должна содержать колонку с ценами (например, 'Стоимость').")
+            st.error("❌ Таблица должна содержать колонку с ценами (например, 'Стоимость', 'Цена с НДС' и т.п.).")
         else:
-            price_col = price_col[0]
             first_col = df_spec.columns[0]
             total_partner_sum = df_spec[price_col].sum()
 
